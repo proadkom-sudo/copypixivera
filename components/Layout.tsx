@@ -1,0 +1,92 @@
+import React from 'react';
+import { ViewState } from '../types';
+
+interface LayoutProps {
+  currentView: ViewState;
+  onNavigate: (view: ViewState) => void;
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ currentView, onNavigate, children }) => {
+  const navItems = [
+    { label: 'SCAN', view: ViewState.HOME },
+    { label: 'DASHBOARD', view: ViewState.DASHBOARD },
+  ];
+
+  return (
+    <div className="min-h-screen w-full relative bg-slate-950 text-white selection:bg-neon-blue/30 selection:text-white print:bg-white print:text-black overflow-x-hidden">
+      
+      {/* Ambient Background Glows - Hidden in print */}
+      <div className="fixed top-[-20%] left-[-10%] w-[80vw] md:w-[50vw] h-[80vw] md:h-[50vw] bg-neon-purple/20 blur-[80px] md:blur-[120px] rounded-full pointer-events-none opacity-40 animate-pulse-slow print:hidden"></div>
+      <div className="fixed bottom-[-20%] right-[-10%] w-[80vw] md:w-[50vw] h-[80vw] md:h-[50vw] bg-neon-blue/20 blur-[80px] md:blur-[120px] rounded-full pointer-events-none opacity-40 animate-pulse-slow print:hidden" style={{ animationDelay: '2s' }}></div>
+      
+      {/* Grid Overlay - Hidden in print */}
+      <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:30px_30px] md:bg-[size:50px_50px] pointer-events-none mask-image-gradient print:hidden"></div>
+
+      {/* Header - Hidden in print */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 md:px-6 md:py-5 flex justify-between items-center backdrop-blur-md bg-black/20 print:hidden border-b border-white/5">
+        <div 
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={() => onNavigate(ViewState.HOME)}
+        >
+          {/* Custom Futuristic 'P' Logo */}
+          <div className="w-8 h-8 md:w-10 md:h-10 relative">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+              {/* Outer Glow */}
+              <path d="M10 5H22C28.6274 5 34 10.3726 34 17C34 23.6274 28.6274 29 22 29H18V35H10V5Z" className="fill-neon-blue/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+              
+              {/* Main Shape P */}
+              <path fillRule="evenodd" clipRule="evenodd" d="M12 6V34H16V28H22C27.5228 28 32 23.5228 32 18C32 12.4772 27.5228 8 22 8H12ZM16 12V24H22C25.3137 24 28 21.3137 28 18C28 14.6863 25.3137 12 22 12H16Z" fill="white" className="group-hover:fill-neon-blue transition-colors duration-300"/>
+              
+              {/* Pixel Accent */}
+              <rect x="24" y="15" width="3" height="3" fill="#00f3ff" className="animate-pulse"/>
+            </svg>
+          </div>
+          <span className="font-mono text-base md:text-xl tracking-[0.2em] font-bold group-hover:text-white/80 transition-colors">PIXIVERA</span>
+        </div>
+
+        <nav className="flex items-center gap-1 md:gap-2 p-1 glass-panel rounded-full">
+          {navItems.map((item) => (
+            <button
+              key={item.label}
+              onClick={() => onNavigate(item.view)}
+              className={`
+                px-3 py-1.5 md:px-6 md:py-2 rounded-full text-[10px] md:text-xs font-mono tracking-widest transition-all duration-300
+                ${currentView === item.view || (currentView === ViewState.RESULT && item.view === ViewState.HOME)
+                  ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
+                  : 'text-white/50 hover:text-white hover:bg-white/5'}
+              `}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </header>
+      
+      {/* Print Header - Visible only in print */}
+      <div className="hidden print:block mb-8 border-b-2 border-black pb-4">
+        <h1 className="text-3xl font-bold font-mono tracking-widest">PIXIVERA FORENSIC REPORT</h1>
+        <p className="text-sm font-mono mt-1">AI GENERATED MEDIA DETECTION LOG</p>
+      </div>
+
+      {/* Main Content */}
+      <main className="relative z-10 pt-20 pb-12 md:pt-24 md:pb-10 min-h-screen flex flex-col print:pt-0 print:pb-0 print:min-h-0 w-full overflow-x-hidden">
+        {children}
+      </main>
+
+      {/* Footer / Status Line - Hidden in print */}
+      <footer className="fixed bottom-0 left-0 right-0 p-3 md:p-4 z-40 pointer-events-none flex justify-between items-end text-[10px] md:text-xs font-mono text-white/20 uppercase print:hidden bg-gradient-to-t from-black via-black/80 to-transparent">
+        <div className="hidden md:block">System Status: <span className="text-neon-green">ONLINE</span></div>
+        <div>Pixivera AI Core v2.5.0</div>
+      </footer>
+      
+      {/* Print Footer */}
+      <div className="hidden print:flex justify-between border-t border-black pt-4 mt-8 font-mono text-xs">
+         <div>CONFIDENTIAL FORENSIC DATA</div>
+         <div>GENERATED BY PIXIVERA</div>
+      </div>
+    </div>
+  );
+};
+
+export default Layout;

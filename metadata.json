@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Pixivera",
+  "description": "Enterprise-grade Deepfake Forensics & Computer Vision Analysis Platform. Detects diffusion artifacts, GAN fingerprints, and temporal inconsistencies using advanced multimodal AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

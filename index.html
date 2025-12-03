@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixivera // AI Detection</title>
+    <!-- Pixivera SVG Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><path fillRule='evenodd' clipRule='evenodd' d='M12 6V34H16V28H22C27.5228 28 32 23.5228 32 18C32 12.4772 27.5228 8 22 8H12ZM16 12V24H22C25.3137 24 28 21.3137 28 18C28 14.6863 25.3137 12 22 12H16Z' fill='%2300f3ff'/><rect x='24' y='15' width='3' height='3' fill='white'/></svg>" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            colors: {
+              glass: 'rgba(255, 255, 255, 0.05)',
+              'glass-border': 'rgba(255, 255, 255, 0.1)',
+              neon: {
+                blue: '#00f3ff',
+                purple: '#bc13fe',
+                green: '#0aff68',
+                red: '#ff2a2a'
+              }
+            },
+            animation: {
+              'scan': 'scan 3s linear infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              scan: {
+                '0%': { top: '0%', opacity: '0' },
+                '10%': { opacity: '1' },
+                '90%': { opacity: '1' },
+                '100%': { top: '100%', opacity: '0' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #050505;
+        color: #ffffff;
+        overflow-x: hidden;
+      }
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0a0a0a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 3px;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      @media print {
+        @page { margin: 1cm; size: landscape; }
+        body {
+          background-color: #ffffff !important;
+          color: #000000 !important;
+          overflow: visible !important;
+        }
+        .glass-panel {
+          background: transparent !important;
+          border: 1px solid #000 !important;
+          backdrop-filter: none !important;
+          box-shadow: none !important;
+          border-radius: 4px !important;
+        }
+        /* Override text colors for print */
+        .text-white, .text-white\/50, .text-white\/40, .text-white\/70, .text-white\/30, .text-white\/20, 
+        .text-neon-blue, .text-neon-green, .text-neon-red, .text-neon-purple {
+          color: #000000 !important;
+          text-shadow: none !important;
+        }
+        /* Hide decorative elements */
+        .animate-scan, .animate-pulse, .animate-pulse-slow {
+          display: none !important;
+        }
+        /* Ensure images print clearly */
+        img {
+          opacity: 1 !important;
+          filter: none !important;
+        }
+        
+        /* Table enhancements for print */
+        .print\:grid {
+          display: grid !important;
+        }
+        .print\:border-black {
+          border-color: #000 !important;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Div pour afficher le résultat (Required for iOS Bridge) -->
+    <div id="result" style="font-size:18px; font-weight:bold; margin-top:20px;"></div>
+    
+<script>
+function handleResult(result) {
+  console.log("Résultat reçu depuis iOS App:", result);
+
+  const resultDiv = document.getElementById("result");
+  if (!resultDiv) return;
+
+  let displayText = "";
+  let parsed = null;
+
+  // ---------- 1. PARSING SÉCURISÉ ----------
+  try {
+    parsed = (typeof result === "string") ? JSON.parse(result) : result;
+  } catch {
+    parsed = null;
+  }
+
+  // ---------- 2. SI JSON VALIDE ----------
+  if (parsed && typeof parsed === "object") {
+    if (parsed.type === "image") {
+      displayText = parsed.isAI ? "❌ Image générée par l'IA" : "✅ Image réelle";
+    } else if (parsed.type === "video") {
+      displayText = parsed.isAI ? "❌ Vidéo générée par l'IA" : "✅ Vidéo réelle";
+    } else {
+      displayText = JSON.stringify(parsed);
+    }
+  }
+
+  // ---------- 3. SI PAS JSON (fallback propre) ----------
+  else {
+    const lower = String(result).toLowerCase();
+    const isAI =
+      lower.includes("ai") ||
+      lower.includes("fake") ||
+      lower.includes("synthetic") ||
+      lower.includes("generated");
+
+    displayText = isAI
+      ? "❌ Média généré par l'IA"
+      : "✅ Média réel";
+  }
+
+  // ---------- 4. AFFICHAGE ----------
+  resultDiv.innerText = displayText;
+  resultDiv.style.color = displayText.includes("❌") ? "red" : "green";
+}
+</script>
+
+  </body>
+</html>
